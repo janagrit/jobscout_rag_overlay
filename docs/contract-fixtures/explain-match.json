@@ -1,0 +1,22 @@
+{
+  "endpoint": "POST /internal/v1/matches/explain",
+  "base_job": {
+    "job_id": "stable-job-id",
+    "title": "Senior QA Automation Engineer",
+    "company": "Example Co",
+    "description": "Playwright end-to-end testing with Python and pytest.",
+    "required_skills": ["Playwright", "Python"],
+    "ats_score": 72,
+    "matched_keywords": ["Playwright"],
+    "missing_keywords": ["TypeScript"]
+  },
+  "cases": [
+    {"name": "valid request", "job_overrides": {}, "status": 200, "response_keys": ["explanation", "strengths", "gaps", "evidence", "disclaimer"]},
+    {"name": "ats_score above 100", "job_overrides": {"ats_score": 101}, "status": 422},
+    {"name": "ats_score below 0", "job_overrides": {"ats_score": -1}, "status": 422},
+    {"name": "more than 100 required skills", "job_overrides": {"required_skills": "SKILLS_101"}, "status": 422},
+    {"name": "empty title", "job_overrides": {"title": ""}, "status": 422},
+    {"name": "description over size limit", "job_overrides": {"description": "DESCRIPTION_OVER_LIMIT"}, "status": 413}
+  ],
+  "disclaimer": "This is an evidence-based assistant explanation, not a hiring prediction or guarantee."
+}

@@ -57,9 +57,42 @@ class RAGService:
                 "gaps": [],
                 "evidence": [],
             }
+        if not isinstance(parsed, dict):
+            parsed = {"explanation": raw}
         return {
             "explanation": str(parsed.get("explanation", "")),
-            "strengths": parsed.get("strengths", []) if isinstance(parsed.get("strengths"), list) else [],
-            "gaps": parsed.get("gaps", []) if isinstance(parsed.get("gaps"), list) else [],
-            "evidence": parsed.get("evidence", []) if isinstance(parsed.get("evidence"), list) else [],
+            "strengths": _string_list(parsed.get("strengths")),
+            "gaps": _string_list(parsed.get("gaps")),
+            "evidence": _grounded_evidence(parsed.get("evidence"), evidence),
         }
+
+
+def _string_list(value) -> list[str]:
+    """Keep model list output only if it is a list; drop nulls and stringify other items."""
+    if not isinstance(value, list):
+        return []
+    result = []
+    for item in value:
+        if item is None:
+            continue
+        if isinstance(item, (dict, list)):
+            item = json.dumps(item, ensure_ascii=False)
+        result.append(str(item))
+    return result
+
+
+def _grounded_evidence(cited, retrieved: list[dict]) -> list[dict]:
+    """Return only evidence the model cited that was actually retrieved, with the retrieved text.
+
+    The model may invent source IDs or paraphrase quotes; responses must contain real CV excerpts.
+    """
+    if not isinstance(cited, list):
+        return []
+    by_id = {item["source_id"]: item for item in retrieved}
+    grounded, seen = [], set()
+    for item in cited:
+        source_id = item.get("source_id") if isinstance(item, dict) else None
+        if source_id in by_id and source_id not in seen:
+            seen.add(source_id)
+            grounded.append(dict(by_id[source_id]))
+    return grounded

@@ -4,6 +4,10 @@ from app.config import CHROMA_PATH
 from app.chunking import chunk_text
 
 
+class EmptyProfileError(ValueError):
+    """The profile has no indexable text (maps to HTTP 400)."""
+
+
 class ProfileStore:
     def __init__(self, client=None):
         self.client = client or chromadb.PersistentClient(path=CHROMA_PATH)
@@ -17,7 +21,7 @@ class ProfileStore:
     def index_profile(self, tenant_id: str, profile_id: str, text: str, embed):
         chunks = chunk_text(text)
         if not chunks:
-            raise ValueError("Profile contains no indexable text")
+            raise EmptyProfileError("Profile contains no indexable text")
         name = self._collection_name(tenant_id, profile_id)
         try:
             self.client.delete_collection(name)

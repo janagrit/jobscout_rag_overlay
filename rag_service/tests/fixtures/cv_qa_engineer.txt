@@ -1,0 +1,15 @@
+Alex Example — Senior QA Automation Engineer (synthetic test profile, not a real person)
+
+Summary
+QA automation engineer with 6 years of experience building end-to-end and API test suites for web products. Focused on reliable CI pipelines, flaky-test reduction and test strategy for small product teams.
+
+Experience
+Lead QA Engineer, Northwind Labs (2021–2025). Built a Playwright end-to-end suite in Python covering checkout, onboarding and billing flows, about 400 tests. Cut flaky failures from 12 percent to under 2 percent by introducing network mocking, deterministic fixtures and retry analysis. Ran tests in GitHub Actions with parallel sharding and HTML reports.
+
+QA Engineer, Contoso Retail (2019–2021). Wrote API tests with pytest and requests for a REST order service. Maintained a Postman collection and migrated it to automated pytest checks in CI. Performed exploratory testing for mobile web releases and wrote bug reports with clear reproduction steps.
+
+Skills
+Playwright, Python, pytest, API testing, GitHub Actions, CI/CD, SQL basics, Git, test planning, exploratory testing.
+
+Education
+BSc in Computer Science, Example State University (2018).

@@ -1,0 +1,10 @@
+{
+  "job_id": "job-good-1",
+  "title": "Senior QA Automation Engineer",
+  "company": "Example Co",
+  "description": "We need an engineer to own our Playwright end-to-end suite, write API tests in Python with pytest, and keep GitHub Actions CI pipelines fast and reliable. Experience reducing flaky tests is a plus.",
+  "required_skills": ["Playwright", "Python", "pytest", "GitHub Actions"],
+  "ats_score": 82,
+  "matched_keywords": ["Playwright", "Python", "pytest"],
+  "missing_keywords": []
+}

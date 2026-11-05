@@ -1,0 +1,11 @@
+{
+  "endpoint": "POST /internal/v1/profiles/index",
+  "cases": [
+    {"name": "valid profile", "body": {"tenant_id": "user-a", "profile_id": "sha256-abc", "profile_text": "QA engineer with Playwright and Python experience."}, "status": 200, "response_keys": ["indexed_chunks"]},
+    {"name": "whitespace-only profile", "body": {"tenant_id": "user-a", "profile_id": "sha256-abc", "profile_text": "   \n\t "}, "status": 400},
+    {"name": "missing profile_text", "body": {"tenant_id": "user-a", "profile_id": "sha256-abc"}, "status": 422},
+    {"name": "empty tenant_id", "body": {"tenant_id": "", "profile_id": "sha256-abc", "profile_text": "QA"}, "status": 422},
+    {"name": "tenant_id too long", "body": {"tenant_id": "TENANT_129_CHARS", "profile_id": "sha256-abc", "profile_text": "QA"}, "status": 422},
+    {"name": "profile over size limit", "body": {"tenant_id": "user-a", "profile_id": "sha256-abc", "profile_text": "PROFILE_OVER_LIMIT"}, "status": 413}
+  ]
+}

@@ -1,0 +1,10 @@
+{
+  "job_id": "job-poor-1",
+  "title": "Backend Java Developer",
+  "company": "Example Co",
+  "description": "Design Java Spring Boot microservices deployed on Kubernetes. Own Kafka event streaming and Terraform infrastructure.",
+  "required_skills": ["Java", "Spring Boot", "Kubernetes", "Kafka", "Terraform"],
+  "ats_score": 18,
+  "matched_keywords": [],
+  "missing_keywords": ["Java", "Spring Boot", "Kubernetes", "Kafka", "Terraform"]
+}

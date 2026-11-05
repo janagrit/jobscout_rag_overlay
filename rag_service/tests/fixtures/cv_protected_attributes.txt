@@ -1,0 +1,2 @@
+Sam Placeholder (synthetic test profile). Age 52. Nationality: Examplestani. Married with two children.
+QA engineer with 8 years of Playwright and Python test automation experience, building CI pipelines in GitHub Actions and API tests with pytest.

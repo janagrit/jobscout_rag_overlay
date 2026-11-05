@@ -2,25 +2,50 @@
 
 This is an internal Python service scaffold for the first RAG feature: evidence-based job-match explanations.
 
+## Requirements
+
+Python **3.10 or newer** (the code uses `X | None` type syntax). macOS ships Python 3.9 as `python3`, so use a newer interpreter explicitly, e.g. Homebrew's `python3.12`.
+
 ## Local setup
 
 ```bash
 cd rag_service
-python -m venv .venv
+python3.12 -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
 cp .env.example .env
 # Set OPENAI_API_KEY and a long random RAG_SERVICE_TOKEN in .env
+# Generate a token: python -c "import secrets; print(secrets.token_urlsafe(48))"
 uvicorn app.main:app --reload --port 8001
 ```
 
+## Configuration
+
+Settings are read from environment variables. `app/config.py` also loads `rag_service/.env` automatically (from any working directory). Real environment variables take precedence over `.env`. `.env` is git-ignored — never commit it; keep `.env.example` in sync when adding settings.
+
+| Variable | Default | Purpose |
+| --- | --- | --- |
+| `OPENAI_API_KEY` | — (required) | OpenAI API key |
+| `OPENAI_CHAT_MODEL` | `gpt-4.1-mini` | Model for match explanations |
+| `OPENAI_EMBEDDING_MODEL` | `text-embedding-3-small` | Embedding model |
+| `RAG_SERVICE_TOKEN` | — (required) | Shared secret for `X-Job-Scout-Service-Token` |
+| `CHROMA_PATH` | `./chroma_db` | Local Chroma storage directory |
+| `TOP_K` | `5` | Number of profile chunks retrieved per job |
+
 Health check: `GET http://localhost:8001/health`
 
-Run unit/security tests:
+## Testing
 
 ```bash
-pytest -q
+pytest -q                                    # offline suite: no network, no OpenAI key, no files written
+pytest -q --cov=app --cov-report=term-missing
+pytest -m live -q -s                         # live model quality checks (needs a real OPENAI_API_KEY; costs money)
 ```
+
+- `tests/conftest.py` provides a deterministic `FakeOpenAI` and an in-memory Chroma store. Use the `api`, `service` and `store` fixtures in new tests.
+- `tests/test_api_contract.py` runs the shared cases in `../docs/contract-fixtures/`. The Worker tests in the main repo use the same files.
+- `tests/evals/` holds grounding, injection and fairness checks against the real model. They are marked `live` and excluded by default.
+- Integration tests for the Worker and UI are specified in `../docs/rag-test-spec.md`.
 
 ## Internal API
 
