@@ -22,5 +22,6 @@ jobs:
           cache: pip
           cache-dependency-path: rag_service/requirements.txt
       - run: pip install -r requirements.txt
-      # Offline suite only: no OpenAI key needed; live model checks (-m live) are excluded by pytest.ini.
-      - run: pytest -q --cov=app --cov-report=term-missing
+      # Offline suite with coverage (flags in pytest.ini; fails below 90%). No OpenAI key needed.
+      # The results table is also written to this run's summary page via GITHUB_STEP_SUMMARY.
+      - run: pytest -q

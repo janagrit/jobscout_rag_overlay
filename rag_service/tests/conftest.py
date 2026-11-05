@@ -2,7 +2,9 @@
 import hashlib
 import json
 import math
+import os
 import re
+from collections import defaultdict
 from pathlib import Path
 from types import SimpleNamespace
 
@@ -117,3 +119,86 @@ def api(monkeypatch, service):
     client = TestClient(main.app, raise_server_exceptions=False)
     client.headers["X-Job-Scout-Service-Token"] = TEST_TOKEN
     return client
+
+
+# ---------------------------------------------------------------------------
+# Results table printed at the end of every run (and written to the GitHub job summary in CI).
+# ---------------------------------------------------------------------------
+def _collect(stats) -> tuple[dict, list[str]]:
+    """Group test reports by file: passed/failed/skipped counts and total time."""
+    rows = defaultdict(lambda: {"passed": 0, "failed": 0, "skipped": 0, "time": 0.0})
+    failures = []
+    for key in ("passed", "failed", "error", "skipped"):
+        for report in stats.get(key, []):
+            nodeid = getattr(report, "nodeid", "")
+            if not nodeid:
+                continue
+            row = rows[Path(nodeid.split("::")[0]).name]
+            row["time"] += getattr(report, "duration", 0.0)
+            if key == "passed" and report.when == "call":
+                row["passed"] += 1
+            elif key in ("failed", "error"):
+                row["failed"] += 1
+                failures.append(nodeid)
+            elif key == "skipped":
+                row["skipped"] += 1
+    # Durations of passing setup/teardown phases are not in stats; call time dominates anyway.
+    return dict(sorted(rows.items())), failures
+
+
+def _coverage(config):
+    plugin = config.pluginmanager.getplugin("_cov")
+    total = getattr(plugin, "cov_total", None) if plugin else None
+    minimum = getattr(getattr(plugin, "options", None), "cov_fail_under", None) if plugin else None
+    return total, minimum
+
+
+def _totals(rows):
+    return {k: sum(r[k] for r in rows.values()) for k in ("passed", "failed", "skipped", "time")}
+
+
+def _coverage_text(total, minimum):
+    if total is None:
+        return "not measured"
+    ok = minimum is None or total >= minimum
+    floor = f" (minimum {minimum:g}%)" if minimum is not None else ""
+    return f"{total:.1f}% {'✅' if ok else '❌'}{floor}"
+
+
+@pytest.hookimpl(trylast=True)
+def pytest_terminal_summary(terminalreporter, exitstatus, config):
+    rows, failures = _collect(terminalreporter.stats)
+    if not rows:
+        return
+    total = _totals(rows)
+    deselected = len(terminalreporter.stats.get("deselected", []))
+    cov_total, cov_min = _coverage(config)
+    width = max(len(name) for name in [*rows, "Coverage (app/)"]) + 2
+
+    tr = terminalreporter
+    tr.write_sep("=", "Test results")
+    tr.write_line(f"{'Suite':<{width}}{'Passed':>8}{'Failed':>8}{'Skipped':>9}{'Time':>9}")
+    for name, r in [*rows.items(), ("TOTAL", total)]:
+        line = f"{name:<{width}}{r['passed']:>8}{r['failed']:>8}{r['skipped']:>9}{r['time']:>8.2f}s"
+        if name == "TOTAL" and deselected:
+            line += f"   ({deselected} deselected)"
+        tr.write_line(line, bold=name == "TOTAL", red=name == "TOTAL" and r["failed"] > 0)
+    tr.write_line(f"{'Coverage (app/)':<{width}}{_coverage_text(cov_total, cov_min)}", bold=True)
+    if failures:
+        tr.write_line("Failed tests:", red=True)
+        for nodeid in failures:
+            tr.write_line(f"  {nodeid}", red=True)
+
+    summary_path = os.getenv("GITHUB_STEP_SUMMARY")
+    if summary_path:
+        lines = ["## Test results", "", "| Suite | Passed | Failed | Skipped | Time |", "|---|---:|---:|---:|---:|"]
+        for name, r in rows.items():
+            lines.append(f"| `{name}` | {r['passed']} | {r['failed']} | {r['skipped']} | {r['time']:.2f}s |")
+        lines.append(f"| **Total** | **{total['passed']}** | **{total['failed']}** | **{total['skipped']}** | {total['time']:.2f}s |")
+        lines += ["", f"**Coverage (app/):** {_coverage_text(cov_total, cov_min)}"]
+        if deselected:
+            lines.append(f"\n{deselected} tests deselected (live model checks run only with `pytest -m live`).")
+        if failures:
+            lines += ["", "**Failed tests:**", *[f"- `{n}`" for n in failures]]
+        with open(summary_path, "a", encoding="utf-8") as fh:
+            fh.write("\n".join(lines) + "\n")

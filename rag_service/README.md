@@ -37,11 +37,12 @@ Health check: `GET http://localhost:8001/health`
 ## Testing
 
 ```bash
-pytest -q                                    # offline suite: no network, no OpenAI key, no files written
-pytest -q --cov=app --cov-report=term-missing
-pytest -m live -q -s                         # live model quality checks (needs a real OPENAI_API_KEY; costs money)
+pytest -q                 # offline suite with coverage; ends with a "Test results" table
+pytest -q --no-cov        # faster local run, no coverage
+pytest -m live -q -s      # live model quality checks (needs a real OPENAI_API_KEY; costs money)
 ```
 
+- Coverage of `app/` is measured on every run and must stay at or above 90%, otherwise the run fails. The thresholds are in `pytest.ini`.
 - `tests/conftest.py` provides a deterministic `FakeOpenAI` and an in-memory Chroma store. Use the `api`, `service` and `store` fixtures in new tests.
 - `tests/test_api_contract.py` runs the shared cases in `../docs/contract-fixtures/`. The Worker tests in the main repo use the same files.
 - `tests/evals/` holds grounding, injection and fairness checks against the real model. They are marked `live` and excluded by default.

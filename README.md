@@ -38,9 +38,11 @@ Browser ──► Cloudflare Worker ──(service token, TLS)──► rag_serv
 
 | Suite | What it covers | Runs |
 |---|---|---|
-| `rag_service/tests` (78 tests, ~99% coverage) | API contract and status codes, auth, tenant isolation, chunking, grounding of model evidence, prompt injection, error handling. Uses a fake OpenAI client and in-memory Chroma. | Every push (CI badge above). No API key needed. |
+| `rag_service/tests` (offline suite; coverage must stay ≥ 90%) | API contract and status codes, auth, tenant isolation, chunking, grounding of model evidence, prompt injection, error handling. Uses a fake OpenAI client and in-memory Chroma. | Every push (CI badge above). No API key needed. |
 | `rag_service/tests/evals` | Real-model quality checks: cited quotes are verbatim CV text, no invented skills, injection is ignored, age or nationality is not used. | Manual: `pytest -m live` |
 | `docs/rag-test-spec.md` | Worker and Playwright test specs for the main Job Scout app | In the main repo |
+
+Every run ends with a **Test results** table: tests per file, totals and `app/` coverage. In CI the same table is on each run's summary page under [Actions](https://github.com/janagrit/jobscout_rag_overlay/actions/workflows/tests.yml).
 
 ## Quick start
 
